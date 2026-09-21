@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hakim Street Bite</title>
+<style>
+:root{--bg:#0d0c0b;--card:#1d1916;--gold:#ffb300;--red:#e53935;--text:#fff7e8;--muted:#c9bfae;--line:#40382f}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}
+.wrap{max-width:1050px;margin:auto;padding:18px 14px 100px}
+header{text-align:center;padding:24px 0}.logo{font-size:50px;font-weight:900;font-style:italic;color:var(--gold)}.sub{color:var(--muted)}
+h2{color:var(--gold);border-left:5px solid var(--red);padding-left:10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px}
+.card,.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
+.name{font-size:21px;font-weight:800}.price{color:var(--gold);font-weight:900;font-size:18px;margin:8px 0}
+.ingredients{color:var(--muted);font-size:13px;margin:10px 0;line-height:1.6}
+.opt{background:#241f1a;padding:9px;border-radius:10px;margin-top:9px}.opt b{display:block;color:var(--gold);margin-bottom:6px}
+label{display:block;margin:7px 0;color:#eee}input,select{width:100%;padding:10px;border-radius:9px;border:1px solid #51483d;background:#111;color:#fff}
+button{border:0;border-radius:10px;padding:11px 15px;font-weight:800;background:var(--gold);color:#15110a;margin-top:8px}
+.small{font-size:12px;color:var(--muted)}.hidden{display:none}
+.cart{position:sticky;bottom:8px;background:#171310;border:1px solid var(--line);border-radius:15px;padding:14px;margin-top:18px;box-shadow:0 5px 25px #000}
+.row{border-top:1px solid var(--line);padding:12px 0}.checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:4px}
+.danger{background:#8d2d28;color:white}.tabs{display:flex;gap:8px;position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:5}
+@media(max-width:520px){.logo{font-size:42px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><div class="logo">Hakim Street Bite</div><div class="sub">Fresh daily • Order on WhatsApp</div></header>
+<div class="tabs"><button onclick="showCustomer()">Customer Website</button><button onclick="showAdmin()">Owner / Admin</button></div>
+
+<section id="customer">
+<div id="menu"></div>
+<div class="cart"><h2>Order</h2><div id="summary">No items yet.</div><button onclick="sendOrder()">Send Order on WhatsApp</button></div>
+</section>
+
+<section id="admin" class="hidden">
+<div class="panel">
+<h2>Simple Owner Editor</h2>
+<p class="small">This version needs no Supabase, no login and no database. Changes are saved on this phone/browser. Use “Download Customer Website” after editing to create the updated website file.</p>
+<label>WhatsApp number</label><input id="phone">
+<button onclick="saveLocal()">Save on this phone</button>
+<button onclick="downloadSite()">Download Customer Website</button>
+</div>
+<div class="panel"><h2>Items & Prices</h2><div id="adminItems"></div></div>
+<div class="panel"><h2>Add-on Prices</h2><div id="adminAddons"></div>
+<label>New add-on</label><input id="newAddon">
+<label>Price</label><input id="newAddonPrice" type="number">
+<button onclick="addAddon()">Add Add-on</button></div>
+</section>
+</div>
+<script>
+const INITIAL={"phone":"+96171752211","items":[{"name":"Chicken Sandwich","category":"Sandwiches","franji":450000,"arabe":550000,"ingredients":["Chicken","Potato","Garlic Sauce","Pickles"],"allowedAddons":["Extra Garlic Sauce","Extra Pickles","Extra Coleslaw","Extra Potato","Extra Meat / Chicken"]},{"name":"Kasbeh Djej","category":"Sandwiches","franji":450000,"arabe":550000,"ingredients":["Kasbeh Djej","Potato","Tomato","Garlic Sauce","Debs el remen or lemon juice"],"allowedAddons":["Extra Garlic Sauce","Extra Pickles","Extra Coleslaw","Extra Potato","Extra Meat / Chicken"]},{"name":"Soujouk","category":"Sandwiches","franji":450000,"arabe":550000,"ingredients":["Soujouk","Mayonnaise","Tomato","Pickles","Lemon","Potato"],"allowedAddons":["Extra Garlic Sauce","Extra Pickles","Extra Tomato","Extra Onion","Extra Cheese","Extra Potato","Extra Meat / Chicken","Extra Sauce"]},{"name":"Makanek","category":"Sandwiches","franji":450000,"arabe":550000,"ingredients":["Makanek","Mayonnaise","Tomato","Pickles","Lemon","Potato"],"allowedAddons":["Extra Garlic Sauce","Extra Pickles","Extra Tomato","Extra Onion","Extra Cheese","Extra Potato","Extra Meat / Chicken","Extra Sauce"]},{"name":"Kafta","category":"Sandwiches","franji":450000,"arabe":550000,"ingredients":["Kafta","Mayonnaise","Tomato","Pickles","Potato"],"allowedAddons":["Extra Garlic Sauce","Extra Pickles","Extra Tomato","Extra Onion","Extra Cheese","Extra Potato","Extra Meat / Chicken","Extra Sauce"]},{"name":"Sanasel","category":"Sandwiches","price":900000,"ingredients":["Sanasel","Garlic","Lemon","Olive Oil","Spices"],"allowedAddons":["Extra Garlic Sauce","Extra Pickles","Extra Tomato","Extra Onion","Extra Cheese","Extra Potato","Extra Meat / Chicken","Extra Sauce"]},{"name":"Nkha3at","category":"Sandwiches","price":600000,"ingredients":["Nkha3at","Garlic","Lemon","Olive Oil","Spices"],"allowedAddons":["Extra Garlic Sauce","Extra Pickles","Extra Tomato","Extra Onion","Extra Cheese","Extra Potato","Extra Meat / Chicken","Extra Sauce"]},{"name":"Sandwich French Fries","category":"Sandwiches","price":300000,"ingredients":["French Fries","Garlic Sauce","Coleslaw","Ketchup","Pickles"],"allowedAddons":["Extra Ketchup","Extra Mustard","Extra Cheese","Extra Sauce"]},{"name":"Lebanese Burger","category":"Hamburgers","price":400000,"ingredients":["Hamburger Patty","Coleslaw","Ketchup","Mustard","Tomato","Onion","Potato"],"allowedAddons":["Extra Ketchup","Extra Garlic Sauce","Extra Pickles","Extra Tomato","Extra Onion","Extra Cheese","Extra Potato","Extra Meat / Chicken","Extra Sauce","Extra Mustard"]},{"name":"Cheese Burger","category":"Hamburgers","price":500000,"ingredients":["Beef Patty","Coleslaw","Ketchup","Mustard","Tomato","Onion","Potato","Mozzarella Cheese"],"allowedAddons":["Extra Ketchup","Extra Garlic Sauce","Extra Pickles","Extra Tomato","Extra Onion","Extra Cheese","Extra Potato","Extra Meat / Chicken","Extra Sauce","Extra Mustard"]},{"name":"Swiss Mushroom","category":"Hamburgers","price":700000,"ingredients":["150g Beef Patty","Swiss Cheese","Mushrooms","Caramelized Onion","Homemade Sauce"],"allowedAddons":["Extra Mushrooms","Extra Cheese","Extra Garlic Sauce","Extra Sauce"]},{"name":"Chicken Burger","category":"Hamburgers","price":400000,"ingredients":[],"allowedAddons":["Extra Garlic Sauce","Extra Pickles","Extra Coleslaw","Extra Potato","Extra Meat / Chicken","Extra Cheese","Extra Sauce"]},{"name":"Farouj Gaz","category":"Chicken","price":1100000,"ingredients":[],"allowedAddons":["Extra Garlic Sauce","Extra Coleslaw","Extra Pickles","Extra Potato","Extra Tomato","Extra Sauce"]},{"name":"French Fries — Medium","category":"Sides","price":350000,"ingredients":[],"allowedAddons":["Extra Ketchup","Extra Garlic Sauce","Extra Cheese","Extra Sauce"]},{"name":"French Fries — Large","category":"Sides","price":500000,"ingredients":[],"allowedAddons":["Extra Ketchup","Extra Garlic Sauce","Extra Cheese","Extra Sauce"]}],"addons":[{"name":"Extra Garlic Sauce","price":0},{"name":"Extra Ketchup","price":0},{"name":"Extra Coleslaw","price":0},{"name":"Extra Pickles","price":0},{"name":"Extra Potato","price":0},{"name":"Extra Tomato","price":0},{"name":"Extra Cheese","price":0},{"name":"Extra Onion","price":0},{"name":"Extra Mushrooms","price":0},{"name":"Extra Sauce","price":0},{"name":"Extra Meat / Chicken","price":0},{"name":"Extra Mustard","price":0}]};
+const KEY="hakimSimpleMenu";
+let d=JSON.parse(localStorage.getItem(KEY)||"null")||structuredClone(INITIAL);
+let cart=[];
+
+function money(n){return Number(n||0).toLocaleString("en-US")+" LL"}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function priceChoices(x){
+  if(x.franji!=null||x.arabe!=null)return [["Franji",x.franji],["Arabe",x.arabe]];
+  return [["",x.price]];
+}
+function renderCustomer(){
+ const cats=[...new Set(d.items.map(x=>x.category))];
+ document.getElementById("menu").innerHTML=cats.map(cat=>`<div><h2>${esc(cat)}</h2><div class="grid">${d.items.filter(x=>x.category===cat).map((x,i)=>{
+   const idx=d.items.indexOf(x), ps=priceChoices(x);
+   const prices=ps.map(p=>p[1]!=null?`<span>${p[0]?p[0]+" — ":""}${money(p[1])}</span>`:"").join(" &nbsp; ");
+   const adds=(x.allowedAddons||[]).map((a,j)=>{let ai=d.addons.findIndex(z=>z.name===a);return `<label><input type="checkbox" data-add="${idx}" value="${esc(a)}"> ${esc(a)}${ai>=0&&d.addons[ai].price?` (+${money(d.addons[ai].price)})`:""}</label>`}).join("");
+   const removes=(x.ingredients||[]).map(v=>`<label><input type="checkbox" data-rem="${idx}" value="${esc(v)}"> Remove ${esc(v)}</label>`).join("");
+   const styles=ps.length>1?`<label>Choose style<select id="style-${idx}">${ps.map(p=>`<option value="${p[1]}">${p[0]} — ${money(p[1])}</option>`).join("")}</select></label>`:"";
+   return `<div class="card"><div class="name">${esc(x.name)}</div><div class="price">${prices}</div>${x.ingredients?.length?`<div class="ingredients"><b>Ingredients:</b> ${x.ingredients.map(esc).join(" • ")}</div>`:""}${styles}${adds?`<div class="opt"><b>Extras</b><div class="checks">${adds}</div></div>`:""}${removes?`<div class="opt"><b>Remove</b><div class="checks">${removes}</div></div>`:""}<button onclick="addToCart(${idx})">Add to Order</button></div>`;
+ }).join("")}</div></div>`).join("");
+}
+function addToCart(idx){
+ const x=d.items[idx], opts=[], style=document.getElementById("style-"+idx);
+ let price=x.price??0;
+ if(style){price=Number(style.value);opts.push(style.options[style.selectedIndex].text)}
+ document.querySelectorAll(`[data-add="${idx}"]:checked`).forEach(e=>{opts.push("Extra "+e.value.replace(/^Extra /,""));let a=d.addons.find(z=>z.name===e.value);if(a)price+=Number(a.price||0)});
+ document.querySelectorAll(`[data-rem="${idx}"]:checked`).forEach(e=>opts.push("Remove "+e.value));
+ cart.push({name:x.name,price,opts});renderCart();
+}
+function renderCart(){
+ const total=cart.reduce((s,x)=>s+x.price,0);
+ document.getElementById("summary").innerHTML=cart.length?cart.map((x,i)=>`${i+1}. ${esc(x.name)}${x.opts.length?" — "+x.opts.map(esc).join(", "):""} — ${money(x.price)}`).join("<br>")+"<hr><b>Total: "+money(total)+"</b>":"No items yet.";
+}
+function sendOrder(){
+ if(!cart.length)return alert("Please add an item first.");
+ const text="Hello Hakim Street Bite, I would like to order:%0A"+cart.map((x,i)=>`${i+1}. ${x.name}${x.opts.length?" — "+x.opts.join(", "):""} — ${money(x.price)}`).join("%0A")+"%0ATotal: "+money(cart.reduce((s,x)=>s+x.price,0));
+ location.href="https://wa.me/"+d.phone.replace(/\D/g,"")+"?text="+encodeURIComponent(decodeURIComponent(text));
+}
+function showCustomer(){document.getElementById("customer").classList.remove("hidden");document.getElementById("admin").classList.add("hidden");renderCustomer()}
+function showAdmin(){document.getElementById("admin").classList.remove("hidden");document.getElementById("customer").classList.add("hidden");renderAdmin()}
+function saveLocal(){d.phone=document.getElementById("phone").value.trim();localStorage.setItem(KEY,JSON.stringify(d));alert("Saved on this phone.");renderCustomer()}
+function renderAdmin(){
+ document.getElementById("phone").value=d.phone;
+ document.getElementById("adminItems").innerHTML=d.items.map((x,i)=>`<div class="row"><b>${esc(x.name)}</b><div class="small">${esc(x.category)}</div>
+ <label>Standard price<input type="number" value="${x.price??""}" onchange="d.items[${i}].price=this.value===''?null:+this.value"></label>
+ <label>Franji<input type="number" value="${x.franji??""}" onchange="d.items[${i}].franji=this.value===''?null:+this.value"></label>
+ <label>Arabe<input type="number" value="${x.arabe??""}" onchange="d.items[${i}].arabe=this.value===''?null:+this.value"></label>
+ <div class="small">Ingredients: ${x.ingredients?.length?x.ingredients.map(esc).join(" • "):"Not specified in the old file."}</div>
+ <div class="opt"><b>Allowed extras</b>${d.addons.map(a=>`<label><input type="checkbox" ${x.allowedAddons?.includes(a.name)?"checked":""} onchange="toggleExtra(${i},'${a.name.replace(/'/g,"\\'")}',this.checked)"> ${esc(a.name)}</label>`).join("")}</div>
+ <div class="opt"><b>Remove ingredients</b>${(x.ingredients||[]).map(v=>`<label><input type="checkbox" ${x.removeIngredients?.includes(v)?"checked":""} onchange="toggleRemove(${i},'${v.replace(/'/g,"\\'")}',this.checked)"> Remove ${esc(v)}</label>`).join("")}</div></div>`).join("");
+ document.getElementById("adminAddons").innerHTML=d.addons.map((a,i)=>`<div class="row"><b>${esc(a.name)}</b><input type="number" value="${a.price}" onchange="d.addons[${i}].price=+this.value"></div>`).join("");
+}
+function toggleExtra(i,n,on){let a=d.items[i].allowedAddons||[];d.items[i].allowedAddons=on?[...new Set([...a,n])]:a.filter(v=>v!==n)}
+function toggleRemove(i,n,on){let a=d.items[i].removeIngredients||[];d.items[i].removeIngredients=on?[...new Set([...a,n])]:a.filter(v=>v!==n)}
+function addAddon(){let n=document.getElementById("newAddon").value.trim();if(!n)return;d.addons.push({name:n,price:+document.getElementById("newAddonPrice").value||0});document.getElementById("newAddon").value="";document.getElementById("newAddonPrice").value="";renderAdmin()}
+function downloadSite(){
+ const clone=JSON.parse(JSON.stringify(d));
+ const out=document.documentElement.outerHTML.replace(/const INITIAL={"phone":"+96171752211","items":[{"name":"Chicken Sandwich","category":"Sandwiches","franji":450000,"arabe":550000,"ingredients":["Chicken","Potato","Garlic Sauce","Pickles"],"allowedAddons":["Extra Garlic Sauce","Extra Pickles","Extra Coleslaw","Extra Potato","Extra Meat / Chicken"]},{"name":"Kasbeh Djej","category":"Sandwiches","franji":450000,"arabe":550000,"ingredients":["Kasbeh Djej","Potato","Tomato","Garlic Sauce","Debs el remen or lemon juice"],"allowedAddons":["Extra Garlic Sauce","Extra Pickles","Extra Coleslaw","Extra Potato","Extra Meat / Chicken"]},{"name":"Soujouk","category":"Sandwiches","franji":450000,"arabe":550000,"ingredients":["Soujouk","Mayonnaise","Tomato","Pickles","Lemon","Potato"],"allowedAddons":["Extra Garlic Sauce","Extra Pickles","Extra Tomato","Extra Onion","Extra Cheese","Extra Potato","Extra Meat / Chicken","Extra Sauce"]},{"name":"Makanek","category":"Sandwiches","franji":450000,"arabe":550000,"ingredients":["Makanek","Mayonnaise","Tomato","Pickles","Lemon","Potato"],"allowedAddons":["Extra Garlic Sauce","Extra Pickles","Extra Tomato","Extra Onion","Extra Cheese","Extra Potato","Extra Meat / Chicken","Extra Sauce"]},{"name":"Kafta","category":"Sandwiches","franji":450000,"arabe":550000,"ingredients":["Kafta","Mayonnaise","Tomato","Pickles","Potato"],"allowedAddons":["Extra Garlic Sauce","Extra Pickles","Extra Tomato","Extra Onion","Extra Cheese","Extra Potato","Extra Meat / Chicken","Extra Sauce"]},{"name":"Sanasel","category":"Sandwiches","price":900000,"ingredients":["Sanasel","Garlic","Lemon","Olive Oil","Spices"],"allowedAddons":["Extra Garlic Sauce","Extra Pickles","Extra Tomato","Extra Onion","Extra Cheese","Extra Potato","Extra Meat / Chicken","Extra Sauce"]},{"name":"Nkha3at","category":"Sandwiches","price":600000,"ingredients":["Nkha3at","Garlic","Lemon","Olive Oil","Spices"],"allowedAddons":["Extra Garlic Sauce","Extra Pickles","Extra Tomato","Extra Onion","Extra Cheese","Extra Potato","Extra Meat / Chicken","Extra Sauce"]},{"name":"Sandwich French Fries","category":"Sandwiches","price":300000,"ingredients":["French Fries","Garlic Sauce","Coleslaw","Ketchup","Pickles"],"allowedAddons":["Extra Ketchup","Extra Mustard","Extra Cheese","Extra Sauce"]},{"name":"Lebanese Burger","category":"Hamburgers","price":400000,"ingredients":["Hamburger Patty","Coleslaw","Ketchup","Mustard","Tomato","Onion","Potato"],"allowedAddons":["Extra Ketchup","Extra Garlic Sauce","Extra Pickles","Extra Tomato","Extra Onion","Extra Cheese","Extra Potato","Extra Meat / Chicken","Extra Sauce","Extra Mustard"]},{"name":"Cheese Burger","category":"Hamburgers","price":500000,"ingredients":["Beef Patty","Coleslaw","Ketchup","Mustard","Tomato","Onion","Potato","Mozzarella Cheese"],"allowedAddons":["Extra Ketchup","Extra Garlic Sauce","Extra Pickles","Extra Tomato","Extra Onion","Extra Cheese","Extra Potato","Extra Meat / Chicken","Extra Sauce","Extra Mustard"]},{"name":"Swiss Mushroom","category":"Hamburgers","price":700000,"ingredients":["150g Beef Patty","Swiss Cheese","Mushrooms","Caramelized Onion","Homemade Sauce"],"allowedAddons":["Extra Mushrooms","Extra Cheese","Extra Garlic Sauce","Extra Sauce"]},{"name":"Chicken Burger","category":"Hamburgers","price":400000,"ingredients":[],"allowedAddons":["Extra Garlic Sauce","Extra Pickles","Extra Coleslaw","Extra Potato","Extra Meat / Chicken","Extra Cheese","Extra Sauce"]},{"name":"Farouj Gaz","category":"Chicken","price":1100000,"ingredients":[],"allowedAddons":["Extra Garlic Sauce","Extra Coleslaw","Extra Pickles","Extra Potato","Extra Tomato","Extra Sauce"]},{"name":"French Fries — Medium","category":"Sides","price":350000,"ingredients":[],"allowedAddons":["Extra Ketchup","Extra Garlic Sauce","Extra Cheese","Extra Sauce"]},{"name":"French Fries — Large","category":"Sides","price":500000,"ingredients":[],"allowedAddons":["Extra Ketchup","Extra Garlic Sauce","Extra Cheese","Extra Sauce"]}],"addons":[{"name":"Extra Garlic Sauce","price":0},{"name":"Extra Ketchup","price":0},{"name":"Extra Coleslaw","price":0},{"name":"Extra Pickles","price":0},{"name":"Extra Potato","price":0},{"name":"Extra Tomato","price":0},{"name":"Extra Cheese","price":0},{"name":"Extra Onion","price":0},{"name":"Extra Mushrooms","price":0},{"name":"Extra Sauce","price":0},{"name":"Extra Meat / Chicken","price":0},{"name":"Extra Mustard","price":0}]};/,"const INITIAL="+JSON.stringify(clone).replace(/</g,"\\u003c")+";");
+ const blob=new Blob(["<!doctype html>\n"+out],{type:"text/html"});
+ const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="index.html";a.click();URL.revokeObjectURL(a.href);
+}
+renderCustomer();
+</script>
+</body></html>
