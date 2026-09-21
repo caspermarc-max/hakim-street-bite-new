@@ -203,7 +203,7 @@ async function save(){
   const {data:sessionData}=await supabaseClient.auth.getSession();
   if(!sessionData.session){msg.textContent="Please LOGIN as admin first.";return;}
   msg.textContent="Saving online...";
-  const {error}=await supabaseClient.from("menu_data").upsert({id:"00000000-0000-0000-0000-000000000001",data:d}
+  const {error}=await supabaseClient.from("menu_data").upsert({id:"00000000-0000-0000-0000-000000000001",data:d});
   if(error){msg.textContent="Save failed: "+error.message;return;}
   localStorage.setItem(key,JSON.stringify(d));
   msg.textContent="Saved online ✓";
