@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hakim Street Bite</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0e0d0c;color:#fff7e8;font-family:Arial,sans-serif}
+.wrap{max-width:1050px;margin:auto;padding:18px}
+header{text-align:center;padding:18px 8px 10px}
+h1,h2{color:#ffb300;margin:8px 0}
+.subtitle{color:#bfb4a4}
+.panel{background:#1b1815;border:1px solid #40372e;border-radius:15px;padding:16px;margin:14px 0}
+.row{border-top:1px solid #3c332a;padding:16px 0}
+.row:first-child{border-top:0}
+.item-title{font-size:19px;font-weight:900}
+.price{color:#ffb300;font-weight:900}
+.muted{color:#bfb4a4;font-size:13px;line-height:1.5}
+.ingredients{margin-top:5px}
+.choice-box{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.choice-pill{background:#202522;border:1px solid #465044;border-radius:8px;padding:8px 10px;font-size:13px}
+.choice-pill input{margin:0 5px 0 0}
+select,button{padding:10px 12px;border-radius:8px;border:0;font-weight:800}
+select{background:#111;color:#fff;border:1px solid #4a4035;width:100%;margin-top:8px}
+button{cursor:pointer}
+.add{background:#ffb300;color:#17120b;margin-top:10px}
+.del{background:#8b2925;color:#fff}
+.cart-total{font-size:22px;font-weight:900;margin-top:12px;color:#ffb300}
+.order{background:#25d366;color:#06140a;width:100%;margin-top:12px;font-size:16px}
+.section-title{font-size:22px}
+.badge{display:inline-block;background:#29231e;border:1px solid #4a4035;border-radius:7px;padding:4px 7px;margin-top:7px;font-size:12px;color:#ddd0bd}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>Hakim Street Bite</h1>
+<div class="subtitle">Fresh • Tasty • Made Daily</div>
+</header>
+
+<div class="panel">
+<h2 class="section-title">Menu</h2>
+<div id="menu"></div>
+</div>
+
+<div class="panel">
+<h2 class="section-title">Your Cart</h2>
+<div id="cart"></div>
+<div class="cart-total">Total: <span id="total">0 LL</span></div>
+<button class="order" onclick="orderWhatsApp()">Order on WhatsApp</button>
+</div>
+</div>
+
+<script>
+const items = [
+{"name":"Chicken Sandwich","category":"Sandwiches","franji":450000,"arabe":550000,"allowedAddons":["Extra Garlic Sauce","Extra Pickles","Extra Coleslaw","Extra Potato","Extra Meat / Chicken"]},
+{"name":"Kasbeh Djej","category":"Sandwiches","franji":450000,"arabe":550000,"allowedAddons":["Extra Garlic Sauce","Extra Pickles","Extra Coleslaw","Extra Potato","Extra Meat / Chicken"]},
+{"name":"Soujouk","category":"Sandwiches","franji":450000,"arabe":550000,"allowedAddons":["Extra Garlic Sauce","Extra Pickles","Extra Tomato","Extra Onion","Extra Cheese","Extra Potato","Extra Meat / Chicken","Extra Sauce"]},
+{"name":"Makanek","category":"Sandwiches","franji":450000,"arabe":550000,"allowedAddons":["Extra Garlic Sauce","Extra Pickles","Extra Tomato","Extra Onion","Extra Cheese","Extra Potato","Extra Meat / Chicken","Extra Sauce"]},
+{"name":"Kafta","category":"Sandwiches","franji":450000,"arabe":550000,"allowedAddons":["Extra Garlic Sauce","Extra Pickles","Extra Tomato","Extra Onion","Extra Cheese","Extra Potato","Extra Meat / Chicken","Extra Sauce"]},
+{"name":"Sanasel","category":"Sandwiches","price":900000,"allowedAddons":["Extra Garlic Sauce","Extra Pickles","Extra Tomato","Extra Onion","Extra Cheese","Extra Potato","Extra Meat / Chicken","Extra Sauce"]},
+{"name":"Nkha3at","category":"Sandwiches","price":600000,"allowedAddons":["Extra Garlic Sauce","Extra Pickles","Extra Tomato","Extra Onion","Extra Cheese","Extra Potato","Extra Meat / Chicken","Extra Sauce"]},
+{"name":"Sandwich French Fries","category":"Sandwiches","price":300000,"allowedAddons":["Extra Ketchup","Extra Mustard","Extra Cheese","Extra Sauce"]},
+{"name":"Lebanese Burger","category":"Hamburgers","price":400000,"allowedAddons":["Extra Ketchup","Extra Garlic Sauce","Extra Pickles","Extra Tomato","Extra Onion","Extra Cheese","Extra Potato","Extra Meat / Chicken","Extra Sauce","Extra Mustard"]},
+{"name":"Cheese Burger","category":"Hamburgers","price":500000,"allowedAddons":["Extra Ketchup","Extra Garlic Sauce","Extra Pickles","Extra Tomato","Extra Onion","Extra Cheese","Extra Potato","Extra Meat / Chicken","Extra Sauce","Extra Mustard"]},
+{"name":"Swiss Mushroom","category":"Hamburgers","price":700000,"allowedAddons":["Extra Mushrooms","Extra Cheese","Extra Garlic Sauce","Extra Sauce"]},
+{"name":"Chicken Burger","category":"Hamburgers","price":400000,"allowedAddons":["Extra Garlic Sauce","Extra Pickles","Extra Coleslaw","Extra Potato","Extra Meat / Chicken","Extra Cheese","Extra Sauce"]},
+{"name":"Farouj Gaz","category":"Chicken","price":1100000,"allowedAddons":["Extra Garlic Sauce","Extra Coleslaw","Extra Pickles","Extra Potato","Extra Tomato","Extra Sauce"]},
+{"name":"French Fries — Medium","category":"Sides","price":350000,"allowedAddons":["Extra Ketchup","Extra Garlic Sauce","Extra Cheese","Extra Sauce"]},
+{"name":"French Fries — Large","category":"Sides","price":500000,"allowedAddons":["Extra Ketchup","Extra Garlic Sauce","Extra Cheese","Extra Sauce"]}
+];
+const addons = [
+{"name":"Extra Garlic Sauce","price":0},{"name":"Extra Ketchup","price":0},{"name":"Extra Coleslaw","price":0},{"name":"Extra Pickles","price":0},{"name":"Extra Potato","price":0},{"name":"Extra Tomato","price":0},{"name":"Extra Cheese","price":0},{"name":"Extra Onion","price":0},{"name":"Extra Mushrooms","price":0},{"name":"Extra Sauce","price":0},{"name":"Extra Meat / Chicken","price":0},{"name":"Extra Mustard","price":0}
+];
+const exactIngredients = {"Chicken Sandwich":["Chicken","Potato","Garlic Sauce","Pickles"],"Kasbeh Djej":["Kasbeh Djej","Potato","Tomato","Garlic Sauce","Debs el remen or lemon juice"],"Soujouk":["Soujouk","Mayonnaise","Tomato","Pickles","Lemon","Potato"],"Makanek":["Makanek","Mayonnaise","Tomato","Pickles","Lemon","Potato"],"Kafta":["Kafta","Mayonnaise","Tomato","Pickles","Potato"],"Sanasel":["Sanasel","Garlic","Lemon","Olive Oil","Spices"],"Nkha3at":["Nkha3at","Garlic","Lemon","Olive Oil","Spices"],"Sandwich French Fries":["French Fries","Garlic Sauce","Coleslaw","Ketchup","Pickles"],"Lebanese Burger":["Hamburger Patty","Coleslaw","Ketchup","Mustard","Tomato","Onion","Potato"],"Cheese Burger":["Beef Patty","Coleslaw","Ketchup","Mustard","Tomato","Onion","Potato","Mozzarella Cheese"],"Swiss Mushroom":["150g Beef Patty","Swiss Cheese","Mushrooms","Caramelized Onion","Homemade Sauce"],"Chicken Burger":["Chicken","Coleslaw","Garlic Sauce","Pickles","Potato"]};
+
+items.forEach(x => {
+  if (!Array.isArray(x.ingredients) || (!x.ingredients.length && exactIngredients[x.name])) {
+    x.ingredients = exactIngredients[x.name] || [];
+  }
+  if (!Array.isArray(x.allowedAddons)) x.allowedAddons = [];
+  if (!Array.isArray(x.removeIngredients)) x.removeIngredients = [];
+});
+
+const phone = "+96171752211";
+let cart = [];
+
+function money(n) {
+  return Number(n || 0).toLocaleString("en-US") + " LL";
+}
+
+function priceFor(x, style) {
+  if (style === "franji") return Number(x.franji ?? x.price ?? 0);
+  if (style === "arabe") return Number(x.arabe ?? x.price ?? 0);
+  return Number(x.price ?? x.franji ?? 0);
+}
+
+function renderMenu() {
+  const menu = document.getElementById("menu");
+  menu.innerHTML = items.map((x, i) => {
+    const hasStyles = x.franji != null || x.arabe != null;
+    const styleHtml = hasStyles ? `
+      <select id="style_${i}">
+        <option value="franji">Franji — ${money(x.franji)}</option>
+        <option value="arabe">Arabe — ${money(x.arabe)}</option>
+      </select>` : "";
+
+    const ing = (x.ingredients || []).length
+      ? `<div class="muted ingredients"><b>Ingredients:</b> ${x.ingredients.join(" • ")}</div>` : "";
+
+    const extras = (x.allowedAddons || []).map((name, j) => {
+      const a = addons.find(z => z.name === name);
+      if (!a) return "";
+      return `<label class="choice-pill">
+        <input type="checkbox" class="extra" data-item="${i}" value="${name}">
+        ${name} (+${money(a.price)})
+      </label>`;
+    }).join("");
+
+    const removed = (x.ingredients || []).map(name => `
+      <label class="choice-pill">
+        <input type="checkbox" class="removed" data-item="${i}" value="${name}">
+        Remove ${name}
+      </label>`).join("");
+
+    return `<div class="row">
+      <div class="item-title">${x.name}</div>
+      <div class="muted">${x.category || ""}</div>
+      ${ing}
+      ${styleHtml}
+      ${extras ? `<div style="margin-top:10px"><b>Extras</b><div class="choice-box">${extras}</div></div>` : ""}
+      ${removed ? `<div style="margin-top:10px"><b>Remove ingredients</b><div class="choice-box">${removed}</div></div>` : ""}
+      <button class="add" onclick="addToCart(${i})">Add to Cart</button>
+    </div>`;
+  }).join("");
+}
+
+function addToCart(i) {
+  const x = items[i];
+  const style = document.getElementById("style_" + i)?.value || "";
+  const base = priceFor(x, style);
+  const extras = [...document.querySelectorAll(`.extra[data-item="${i}"]:checked`)].map(c => c.value);
+  const removed = [...document.querySelectorAll(`.removed[data-item="${i}"]:checked`)].map(c => c.value);
+  const extraTotal = extras.reduce((sum, n) => sum + Number((addons.find(a => a.name === n) || {}).price || 0), 0);
+  cart.push({name:x.name, style, base, extras, removed, total:base + extraTotal});
+  renderCart();
+}
+
+function renderCart() {
+  const el = document.getElementById("cart");
+  if (!cart.length) {
+    el.innerHTML = '<div class="muted">Your cart is empty.</div>';
+    document.getElementById("total").textContent = "0 LL";
+    return;
+  }
+  el.innerHTML = cart.map((c,i) => `
+    <div class="row">
+      <b>${c.name}</b>
+      ${c.style ? `<span class="badge">${c.style === "franji" ? "Franji" : "Arabe"}</span>` : ""}
+      <div class="muted">Base: ${money(c.base)}</div>
+      ${c.extras.length ? `<div>Extras: ${c.extras.map(n => {
+        const a = addons.find(z => z.name === n);
+        return n + " (+" + money(a?.price || 0) + ")";
+      }).join(", ")}</div>` : ""}
+      ${c.removed.length ? `<div>Removed: ${c.removed.join(", ")}</div>` : ""}
+      <b>Item total: ${money(c.total)}</b><br>
+      <button class="del" onclick="cart.splice(${i},1);renderCart()">Remove</button>
+    </div>`).join("");
+
+  document.getElementById("total").textContent =
+    money(cart.reduce((sum,c) => sum + c.total, 0));
+}
+
+function orderWhatsApp() {
+  if (!cart.length) {
+    alert("Your cart is empty.");
+    return;
+  }
+  let msg = "Hello Hakim Street Bite, I would like to order:%0A%0A";
+  cart.forEach((c,i) => {
+    msg += (i+1) + ". " + c.name;
+    if (c.style) msg += " (" + (c.style === "franji" ? "Franji" : "Arabe") + ")";
+    msg += "%0A";
+    if (c.extras.length) msg += "Extras: " + c.extras.join(", ") + "%0A";
+    if (c.removed.length) msg += "Remove: " + c.removed.join(", ") + "%0A";
+    msg += "Total: " + money(c.total) + "%0A%0A";
+  });
+  msg += "Grand Total: " + money(cart.reduce((sum,c) => sum + c.total, 0));
+  window.open("https://wa.me/" + phone.replace(/\D/g,"") + "?text=" + msg, "_blank");
+}
+
+renderMenu();
+renderCart();
+</script>
+</body>
+</html>
