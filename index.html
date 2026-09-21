@@ -52,7 +52,10 @@ button{cursor:pointer}
 </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>const SUPABASE_URL='https://zpebjvrybxcuiitwbchz.supabase.co'; const SUPABASE_ANON_KEY='sb_publishable__t4XzKUr5Z8EKmYut8OB7A_YQP54Qqv';</script>
 <script>
+
 const items = [
 {"name":"Chicken Sandwich","category":"Sandwiches","franji":450000,"arabe":550000,"allowedAddons":["Extra Garlic Sauce","Extra Pickles","Extra Coleslaw","Extra Potato","Extra Meat / Chicken"]},
 {"name":"Kasbeh Djej","category":"Sandwiches","franji":450000,"arabe":550000,"allowedAddons":["Extra Garlic Sauce","Extra Pickles","Extra Coleslaw","Extra Potato","Extra Meat / Chicken"]},
@@ -83,7 +86,24 @@ items.forEach(x => {
   if (!Array.isArray(x.removeIngredients)) x.removeIngredients = [];
 });
 
-const phone = "+96171752211";
+
+let menuData = {phone:"+96171752211",items,addons};
+let phone = menuData.phone;
+
+function applyData(data) {
+  if(!data || !Array.isArray(data.items)) return;
+  menuData = data;
+  phone = data.phone || "+96171752211";
+  items.length = 0; items.push(...(data.items||[]));
+  addons.length = 0; addons.push(...(data.addons||[]));
+  items.forEach(x=>{
+    if(!Array.isArray(x.ingredients) || (!x.ingredients.length && exactIngredients[x.name])) x.ingredients=exactIngredients[x.name]||[];
+    if(!Array.isArray(x.allowedAddons)) x.allowedAddons=[];
+    if(!Array.isArray(x.removeIngredients)) x.removeIngredients=[];
+  });
+}
+
+
 let cart = [];
 
 function money(n) {
@@ -192,6 +212,24 @@ function orderWhatsApp() {
 
 renderMenu();
 renderCart();
+
+
+async function loadOnlineMenu() {
+  try {
+    if(!SUPABASE_URL || SUPABASE_URL.includes("PASTE_YOUR") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.includes("PASTE_YOUR")) {
+      renderMenu(); renderCart(); return;
+    }
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const {data,error} = await client.from("menu_store").select("data").eq("id","hakim-menu").maybeSingle();
+    if(!error && data && data.data) applyData(data.data);
+  } catch(e) {
+    console.log("Online menu load failed; using built-in menu.", e);
+  }
+  renderMenu();
+  renderCart();
+}
+
+loadOnlineMenu();
 </script>
 </body>
 </html>
