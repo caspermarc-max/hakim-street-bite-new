@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hakim Street Bite</title>
+<style>
+body{margin:0;background:#0d0c0b;color:#fff7e8;font-family:Arial,sans-serif}
+.wrap{max-width:900px;margin:auto;padding:18px 14px 90px}
+h1{color:#ffb300;margin:8px 0} h2{margin:0 0 6px}
+.card{background:#1d1916;border:1px solid #40382f;border-radius:16px;padding:16px;margin:12px 0}
+.price{font-weight:800;color:#ffb300} .small{color:#c9bfae;font-size:13px}
+button{border:0;border-radius:10px;padding:11px 14px;font-weight:800;background:#ffb300;color:#15110a;margin:5px 3px 5px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:7px}
+label{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}
+input,textarea,select{box-sizing:border-box;background:#111;color:#fff;border:1px solid #51483d;border-radius:9px;padding:9px}
+textarea{width:100%;min-height:70px}
+.cart-toggle{position:fixed;right:14px;bottom:16px;background:#ffb300;color:#15110a;border:0;border-radius:999px;padding:12px 15px;font-weight:900;box-shadow:0 5px 18px #0008;z-index:1000;cursor:pointer}
+.cart-toggle .cart-count{background:#15110a;color:#ffb300;border-radius:999px;padding:2px 7px;margin-left:5px}
+.cart{position:fixed;right:12px;bottom:70px;width:min(92vw,420px);max-height:72vh;overflow:auto;background:#1d1916;border:1px solid #ffb300;border-radius:15px;padding:12px;z-index:999;box-shadow:0 10px 30px #000b;transform:translateX(120%);transition:transform .22s ease}
+.cart.open{transform:translateX(0)}
+.item-actions{margin-top:10px} .pill{display:inline-block;background:#2a241f;padding:5px 8px;border-radius:8px;margin:2px;font-size:12px}
+.hidden{display:none} .total{font-size:20px;font-weight:900;color:#ffb300}
+</style></head>
+<body><div class="wrap">
+<h1>Hakim Street Bite</h1>
+<p class="small">Choose your item, extras and removals. You can also write a special request/description.</p>
+<div id="menu"></div>
+<button class="cart-toggle" onclick="toggleCart()">🛒 Order <span class="cart-count" id="cartCount">0</span></button>
+<div class="cart" id="cartPanel">
+<div style="display:flex;justify-content:space-between;align-items:center"><h2>Order</h2><button onclick="toggleCart()">Close</button></div><div id="cart"></div>
+<div class="total">Total: <span id="total">0</span> LL</div>
+<button onclick="sendWhatsApp()">Send Order on WhatsApp</button>
+<button onclick="clearCart()">Clear Order</button>
+</div>
+</div>
+<script>
+const MENU=[{"name": "Chicken Sandwich", "category": "Sandwiches", "prices": {"Franji": 450000, "Arabe": 550000}, "ingredients": ["Chicken", "Potato", "Garlic Sauce", "Pickles"], "adds": [["Chicken", 200000], ["Cheese", 100000], ["Garlic Sauce", null], ["Mayo", null], ["Coleslaw", null], ["Tomato", null]], "removes": ["Potato", "Garlic Sauce", "Pickles"]}, {"name": "Kasbeh Djej", "category": "Sandwiches", "prices": {"Franji": 450000, "Arabe": 550000}, "ingredients": ["Kasbeh Djej", "Potato", "Tomato", "Garlic Sauce", "Debs el remen or lemon juice"], "adds": [["Garlic Sauce", null], ["Mayo", null], ["Coleslaw", null], ["Potato", null], ["Tomato", null]], "removes": ["Potato", "Tomato", "Garlic Sauce", "Debs el remen or lemon juice"]}, {"name": "Soujouk", "category": "Sandwiches", "prices": {"Franji": 450000, "Arabe": 550000}, "ingredients": ["Soujouk", "Mayonnaise", "Tomato", "Pickles", "Lemon", "Potato"], "adds": [["Cheese", 100000], ["Garlic Sauce", null], ["Mayo", null], ["Ketchup", null], ["Potato", null], ["Tomato", null]], "removes": ["Mayonnaise", "Tomato", "Pickles", "Lemon", "Potato"]}, {"name": "Makanek", "category": "Sandwiches", "prices": {"Franji": 450000, "Arabe": 550000}, "ingredients": ["Makanek", "Mayonnaise", "Tomato", "Pickles", "Lemon", "Potato"], "adds": [["Meat", 200000], ["Mayo", null], ["Potato", null], ["Tomato", null]], "removes": ["Mayonnaise", "Tomato", "Pickles", "Lemon", "Potato"]}, {"name": "Kafta", "category": "Sandwiches", "prices": {"Franji": 450000, "Arabe": 550000}, "ingredients": ["Kafta", "Mayonnaise", "Tomato", "Pickles", "Potato"], "adds": [["Meat", 200000], ["Cheese", 100000], ["Mayo", null], ["Pickles", null], ["Potato", null], ["Tomato", null]], "removes": ["Mayonnaise", "Tomato", "Pickles", "Potato"]}, {"name": "Sanasel", "category": "Sandwiches", "prices": {"Single": 900000}, "ingredients": ["Sanasel", "Garlic", "Lemon", "Olive Oil", "Spices"], "adds": [["Garlic Sauce", null], ["Chicken", null], ["Meat", null], ["Cheese", null]], "removes": ["Garlic", "Lemon", "Olive Oil", "Spices"]}, {"name": "Nkha3at", "category": "Sandwiches", "prices": {"Single": 600000}, "ingredients": ["Nkha3at", "Garlic", "Lemon", "Olive Oil", "Spices"], "adds": [["Garlic Sauce", null]], "removes": ["Garlic", "Lemon", "Olive Oil", "Spices"]}, {"name": "Sandwich French Fries", "category": "Sandwiches", "prices": {"Single": 300000}, "ingredients": ["French Fries", "Garlic Sauce", "Coleslaw", "Ketchup", "Pickles"], "adds": [], "removes": []}, {"name": "Lebanese Burger", "category": "Hamburgers", "prices": {"Single": 400000}, "ingredients": ["Hamburger Patty", "Coleslaw", "Ketchup", "Mustard", "Tomato", "Onion", "Potato"], "adds": [["Meat", 200000], ["Mayo", null], ["Ketchup", null], ["Coleslaw", null], ["Potato", null], ["Tomato", null], ["Onion", null]], "removes": ["Coleslaw", "Ketchup", "Mustard", "Tomato", "Onion", "Potato"]}, {"name": "Cheese Burger", "category": "Hamburgers", "prices": {"Single": 500000}, "ingredients": ["Beef Patty", "Coleslaw", "Ketchup", "Mustard", "Tomato", "Onion", "Potato", "Mozzarella Cheese"], "adds": [["Meat", 200000], ["Ketchup", null], ["Coleslaw", null]], "removes": ["Coleslaw", "Ketchup", "Mustard", "Tomato", "Onion", "Potato"]}, {"name": "Swiss Mushroom", "category": "Hamburgers", "prices": {"Single": 700000}, "ingredients": ["150g Beef Patty", "Swiss Cheese", "Mushrooms", "Caramelized Onion", "Homemade Sauce"], "adds": [["Meat", 200000], ["Onion", null], ["Mushrooms", 100000]], "removes": ["Swiss Cheese", "Mushrooms", "Caramelized Onion", "Homemade Sauce"]}, {"name": "Chicken Burger", "category": "Hamburgers", "prices": {"Single": 400000}, "ingredients": ["Chicken", "Coleslaw", "Garlic Sauce", "Potato"], "adds": [["Meat", 200000], ["Cheese", 100000], ["Garlic Sauce", null], ["Mayo", null], ["Ketchup", null], ["Coleslaw", null], ["Pickles", null]], "removes": ["Coleslaw", "Garlic Sauce", "Potato"]}, {"name": "Farouj Gaz", "category": "Chicken", "prices": {"Single": 1100000}, "ingredients": [], "adds": [], "removes": []}, {"name": "French Fries — Medium", "category": "Sides", "prices": {"Single": 300000}, "ingredients": [], "adds": [], "removes": []}, {"name": "French Fries — Large", "category": "Sides", "prices": {"Single": 500000}, "ingredients": [], "adds": [], "removes": []}];
+const PHONE="+96171752211";
+let cart=[];
+const money=n=>Number(n||0).toLocaleString("en-US");
+function renderMenu(){
+ const el=document.getElementById("menu");
+ el.innerHTML=MENU.map((it,i)=>`
+ <div class="card">
+  <h2>${it.name}</h2><div class="small">${it.category}</div>
+  <div>${Object.entries(it.prices).map(([k,v])=>`<span class="pill">${k}: <b>${money(v)} LL</b></span>`).join("")}</div>
+  ${it.ingredients.length?`<p class="small"><b>Ingredients:</b> ${it.ingredients.join(", ")}</p>`:""}
+  <div class="item-actions"><button onclick="openItem(${i})">Add to Order</button></div>
+ </div>`).join("");
+}
+function openItem(i){
+ const it=MENU[i];
+ const opts=Object.entries(it.prices);
+ let html=`<div class="card" id="editor"><h2>${it.name}</h2>`;
+ if(opts.length>1) html+=`<label>Type <select id="variant">${opts.map(([k,v])=>`<option value="${v}">${k} — ${money(v)} LL</option>`).join("")}</select></label>`;
+ else html+=`<input type="hidden" id="variant" value="${opts[0][1]}">`;
+ if(it.adds.length) html+=`<h3>Add / Extras</h3><div class="grid">${it.adds.map((a,j)=>`<label><input type="checkbox" data-add="${j}"> Add ${a[0]} ${a[1]!=null?"+"+money(a[1])+" LL":"+ price not set"} </label>`).join("")}</div>`;
+ if(it.removes.length) html+=`<h3>Remove</h3><div class="grid">${it.removes.map((r,j)=>`<label><input type="checkbox" data-remove="${j}"> Remove ${r}</label>`).join("")}</div>`;
+ html+=`<h3>Description / Special Request</h3><textarea id="desc" placeholder="Write exactly what you want..."></textarea><br><button onclick="addItem(${i})">Add to Order</button><button onclick="document.getElementById('editor').remove()">Cancel</button></div>`;
+ document.getElementById("menu").insertAdjacentHTML("afterbegin",html);
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+function addItem(i){
+ const it=MENU[i]; const base=Number(document.getElementById("variant").value);
+ let extra=0, adds=[], removes=[];
+ document.querySelectorAll("[data-add]:checked").forEach(x=>{const a=it.adds[Number(x.dataset.add)];adds.push(a[0]); if(a[1]!=null) extra+=Number(a[1]);});
+ document.querySelectorAll("[data-remove]:checked").forEach(x=>removes.push(it.removes[Number(x.dataset.remove)]));
+ const desc=document.getElementById("desc").value.trim();
+ cart.push({name:it.name,base,adds,removes,extra,desc,total:base+extra});
+ renderCart(); document.getElementById("editor").remove();
+}
+function toggleCart(){document.getElementById("cartPanel").classList.toggle("open");}
+function renderCart(){
+ const c=document.getElementById("cart");
+ document.getElementById("cartCount").textContent=cart.length;
+ if(!cart.length){c.innerHTML='<div class="small">No items yet.</div>';document.getElementById("total").textContent="0";return;}
+ c.innerHTML=cart.map((x,i)=>`<div class="card"><b>${i+1}. ${x.name}</b> — ${money(x.total)} LL
+ ${x.adds.length?`<div class="small">Adds: ${x.adds.join(", ")}</div>`:""}
+ ${x.removes.length?`<div class="small">Remove: ${x.removes.join(", ")}</div>`:""}
+ ${x.desc?`<div class="small">Description: ${escapeHtml(x.desc)}</div>`:""}
+ <button onclick="cart.splice(${i},1);renderCart()">Remove Item</button></div>`).join("");
+ document.getElementById("total").textContent=money(cart.reduce((s,x)=>s+x.total,0));
+}
+function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
+function sendWhatsApp(){
+ if(!cart.length){alert("Please add an item first.");return;}
+ const lines=["Hakim Street Bite — New Order",""];
+ cart.forEach((x,i)=>{lines.push(`${i+1}. ${x.name} — ${money(x.base)} LL`); if(x.adds.length)lines.push("   Adds: "+x.adds.join(", ")); if(x.removes.length)lines.push("   Remove: "+x.removes.join(", ")); if(x.desc)lines.push("   Description: "+x.desc); lines.push("   Item total: "+money(x.total)+" LL","");});
+ lines.push("TOTAL: "+money(cart.reduce((s,x)=>s+x.total,0))+" LL");
+ window.open("https://wa.me/"+PHONE.replace(/\D/g,"")+"?text="+encodeURIComponent(lines.join("\n")),"_blank");
+}
+function clearCart(){cart=[];renderCart();}
+renderMenu();renderCart();
+</script></body></html>
