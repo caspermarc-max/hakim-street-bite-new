@@ -179,7 +179,7 @@ async function adminLogout(){
 }
 async function loadOnlineMenu(){
   if(!supabaseClient)return;
-  const {data,error}=await supabaseClient.from("menu_store").select("data").eq("id","hakim-menu").maybeSingle();
+  const {data,error}=await supabaseClient.from("menu_data").select("data").eq("id","00000000-0000-0000-0000-000000000001").maybeSingle()
   if(!error && data && data.data && Array.isArray(data.data.items)){
     d=data.data;
     d.items=d.items||[]; d.addons=d.addons||[];
@@ -203,7 +203,7 @@ async function save(){
   const {data:sessionData}=await supabaseClient.auth.getSession();
   if(!sessionData.session){msg.textContent="Please LOGIN as admin first.";return;}
   msg.textContent="Saving online...";
-  const {error}=await supabaseClient.from("menu_store").upsert({id:"hakim-menu",data:d},{onConflict:"id"});
+  const {error}=await supabaseClient.from("menu_data").upsert({id:"00000000-0000-0000-0000-000000000001",data:d}
   if(error){msg.textContent="Save failed: "+error.message;return;}
   localStorage.setItem(key,JSON.stringify(d));
   msg.textContent="Saved online ✓";
