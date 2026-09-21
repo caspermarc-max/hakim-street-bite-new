@@ -16,6 +16,7 @@ input,select{padding:10px;background:#111;color:#fff;border:1px solid #4a4035;bo
   <button class="del" onclick="adminLogout()">LOGOUT</button>
   <span id="authMsg" class="muted"></span>
 </div>
+<div class="note">Login with the Supabase admin account, then press <b>SAVE ALL</b> once to publish the current menu online. After that, customer phones will read the same online menu.</div>
 <div class="panel"><h2>WhatsApp</h2><label>Order number</label><input id="phone" style="width:260px"><p class="muted">Example: +96171752211</p></div>
 <div class="panel"><h2>Items & Prices</h2><p class="muted">Sandwiches can have two selectable bread/style options: Franji and Arabe. Chicken Sandwich is 450,000 LL / 550,000 LL.</p><div id="items"></div></div>
 <div class="panel"><h2>Add New Item</h2><input id="nn" placeholder="Name"><select id="nc"><option>Sandwiches</option><option>Hamburgers</option><option>Chicken</option><option>Sides</option><option>New Items</option></select><input id="np" type="number" placeholder="Standard price"><input id="nf" type="number" placeholder="Franji price"><input id="na" type="number" placeholder="Arabe price"><input id="ning" placeholder="Ingredients (comma separated)"><button class="save" onclick="addItem()">Add</button></div>
@@ -191,8 +192,8 @@ async function loadOnlineMenu(){
     render();
     msg.textContent="Online menu loaded ✓";
     setTimeout(()=>msg.textContent="",1800);
-  } else if(!error && data && data.data && !Array.isArray(data.data.items)){
-    msg.textContent="Online menu is empty. Your current menu is ready to upload.";
+  } else if(!error && !data){
+    msg.textContent="No online menu yet. Press SAVE ALL once to publish this menu.";
     setTimeout(()=>msg.textContent="",2500);
   }
 }
@@ -202,7 +203,7 @@ async function save(){
   const {data:sessionData}=await supabaseClient.auth.getSession();
   if(!sessionData.session){msg.textContent="Please LOGIN as admin first.";return;}
   msg.textContent="Saving online...";
-  const {error}=await supabaseClient.from("menu_store").upsert({id:"hakim-menu",data:d,updated_at:new Date().toISOString()},{onConflict:"id"});
+  const {error}=await supabaseClient.from("menu_store").upsert({id:"hakim-menu",data:d},{onConflict:"id"});
   if(error){msg.textContent="Save failed: "+error.message;return;}
   localStorage.setItem(key,JSON.stringify(d));
   msg.textContent="Saved online ✓";
